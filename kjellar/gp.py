@@ -11,7 +11,7 @@ import time
 
 import discord
 
-from kjellar.config import SPREADSHEETID, GPJSON, GPFILE, GPPATH, HUBS, READRANGES, ALFA, CHECKID, SEASON, SEASONS
+from kjellar.config import SPREADSHEETID, GPJSON, GPFILE, GPPATH, HUBS, READRANGES, ALFA, CHECKID, SEASON, SEASONS, ANULL
 
 def update():
     with open(GPFILE, "rb") as file:
@@ -159,12 +159,19 @@ def gp_update():
     if os.path.getsize(GPPATH) > 0:
         with open(GPPATH, "rb") as file:
             toprow = pkl.load(file)
+    if os.path.getsize(ANULL) > 0:
+        with open(ANULL, "rb") as file:
+            anull = pkl.load(file)
+    else:
+        anull = []
 
     values = []
     toprow.insert(0, "Driver")
     toprow.append("Points")
     values.append(toprow)
     y=3
+
+    
 
     for hub in HUBS:
 
@@ -180,34 +187,39 @@ def gp_update():
             else:
                 read = READRANGES[hub]
 
-            result = ark.values().get(spreadsheetId = SPREADSHEETID, range=f"{toprow[i+1]}!{read}").execute()
+            if toprow[i+1] in anull:
+                for dude in laps:
+                    laps[dude].append("-")
+            else: 
 
-            med = []
+                result = ark.values().get(spreadsheetId = SPREADSHEETID, range=f"{toprow[i+1]}!{read}").execute()
 
-            verdier = result.get("values", [])
+                med = []
 
-            for row in verdier: 
-                if row[0] == "":
-                    break
-                if row[0] in laps:
-                    laps[row[0]].append(row[4])
-                else:
-                    navn.append(row[0])
-                    lst = ["-"]*i
-                    lst.append(row[4])
-                    laps[row[0]] = lst
+                verdier = result.get("values", [])
 
-                if row[0] in scores:
-                    scores[row[0]] += int(row[5])
-                else:
-                    scores[row[0]] = int(row[5])
+                for row in verdier: 
+                    if row[0] == "":
+                        break
+                    if row[0] in laps:
+                        laps[row[0]].append(row[4])
+                    else:
+                        navn.append(row[0])
+                        lst = ["-"]*i
+                        lst.append(row[4])
+                        laps[row[0]] = lst
 
-                med.append(row[0])
-            
-            for dude in laps:
-                if dude in med:
-                    continue
-                laps[dude].append("-")
+                    if row[0] in scores:
+                        scores[row[0]] += int(row[5])
+                    else:
+                        scores[row[0]] = int(row[5])
+
+                    med.append(row[0])
+                
+                for dude in laps:
+                    if dude in med:
+                        continue
+                    laps[dude].append("-")
 
         for driver in scores:
             lst = [driver]
@@ -250,6 +262,12 @@ def season_update():
 
     with open(SEASONS, "rb") as file:
         seasons = pkl.load(file)
+
+    if os.path.getsize(ANULL) > 0:
+        with open(ANULL, "rb") as file:
+            anull = pkl.load(file)
+    else:
+        anull = []
     
     y = 3
 
@@ -268,6 +286,7 @@ def season_update():
             toprow.append("Points")
             values.append(toprow)
 
+
             if (hub == "Jørpeland" or hub == "Ås") and season == "v22":
                 x += len(toprow)
                 continue
@@ -278,40 +297,52 @@ def season_update():
             navn = []
             drivers = []
             
-            if hub == "Tromsø" and (season == "v22" or (season == "s22" and g < 7)):
+            if hub == "Tromsø" and season == "v22":
                 read = READRANGES["All"]
             else:
                 read = READRANGES[hub]
-            g+=1
             for i in range(len(toprow)-2):
-                result = ark.values().get(spreadsheetId = SPREADSHEETID, range=f"{toprow[i+1]}!{read}").execute()
+                if hub == "Tromsø" and season == "s22" and g < 7:
+                    read = READRANGES["All"]
+                    result = ark.values().get(spreadsheetId = SPREADSHEETID, range=f"{toprow[i+1]}!{read}").execute()
+                elif hub == "Tromsø" and season == "s22" and g >= 7:
+                    read = READRANGES[hub]
+                    result = ark.values().get(spreadsheetId = SPREADSHEETID, range=f"{toprow[i+1]}!{read}").execute()
+                else:
+                    result = ark.values().get(spreadsheetId = SPREADSHEETID, range=f"{toprow[i+1]}!{read}").execute()
 
-                med = []
+                if toprow[i+1] in anull:
+                    for dude in laps:
+                        laps[dude].append("-")
+                else:
+                        
+                    med = []
 
-                verdier = result.get("values", [])
+                    verdier = result.get("values", [])
 
-                for row in verdier: 
-                    if row[0] == "":
-                        break
-                    if row[0] in laps:
-                        laps[row[0]].append(row[4])
-                    else:
-                        navn.append(row[0])
-                        lst = ["-"]*i
-                        lst.append(row[4])
-                        laps[row[0]] = lst
+                    g+=1
+                    for row in verdier: 
+                        if row[0] == "":
+                            break
+                        if row[0] in laps:
+                            laps[row[0]].append(row[4])
+                        else:
+                            navn.append(row[0])
+                            lst = ["-"]*i
+                            lst.append(row[4])
+                            laps[row[0]] = lst
 
-                    if row[0] in scores:
-                        scores[row[0]] += int(row[5])
-                    else:
-                        scores[row[0]] = int(row[5])
+                        if row[0] in scores:
+                            scores[row[0]] += int(row[5])
+                        else:
+                            scores[row[0]] = int(row[5])
 
-                    med.append(row[0])
-                
-                for dude in laps:
-                    if dude in med:
-                        continue
-                    laps[dude].append("-")
+                        med.append(row[0])
+                    
+                    for dude in laps:
+                        if dude in med:
+                            continue
+                        laps[dude].append("-")
 
             for driver in scores:
                 lst = [driver]
@@ -570,6 +601,39 @@ async def loadGP(guild, msg):
     season_update()
     await msg.channel.send("3/3")
     await msg.add_reaction(await guild.fetch_emoji(CHECKID))
+
+async def anullGP(gp, msg):
+    if os.path.getsize(ANULL) > 0:
+        with open(ANULL, "rb") as file:
+            anull = pkl.load(file)
+    else:
+        anull = []
+
+    with open(GPPATH, "rb") as source:
+        gps = pkl.load(source)
+
+    if gp in gps:
+        if gp not in anull:
+            anull.append(gp)
+            with open(ANULL, "wb") as dest:
+                pkl.dump(anull, dest)
+            await msg.channel.send(f"{gp} e anullert")
+        else:
+            await msg.channel.send("GP e allerede annullert")
+    else:
+        await msg.chanel.send("GP e isje i systemet.")
+    
+async def unanullGP(gp, msg):
+    with open(ANULL, "rb") as file:
+        anull = pkl.load(file)
+
+    if gp in anull:
+        anull.remove(gp)
+        with open(ANULL, "wb") as dest:
+            pkl.dump(anull, dest)
+        await msg.channel.send(f"{gp} e isje lenger anullert")
+    else:
+        await msg.chanel.send("GP e isje annullert.")
 
 if __name__ == '__main__':
     update()

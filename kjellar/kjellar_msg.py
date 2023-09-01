@@ -1,6 +1,6 @@
 from kjellar.member import getServer, setServer
 from kjellar.customs import customs, reset_customs
-from kjellar.gp import addGP, loadGP, removeGP, printGP, setGP, ranking, loadGP, newSeason, setSeason, removeGPseason
+from kjellar.gp import addGP, loadGP, removeGP, printGP, setGP, ranking, loadGP, newSeason, setSeason, removeGPseason,  anullGP, unanullGP
 from kjellar.csvtopkl import * 
 
 import kjellar.kekw as kekw
@@ -21,7 +21,7 @@ async def newMessage(client, msg):
 
     guild = client.get_guild(GUILDID)
 
-    if msg.author.id != BOTID and msg.guild == guild and msg.content.startswith("&") == False and msg.channel.name != "controller":
+    if msg.author.id != BOTID and msg.guild == guild and msg.content.startswith("&") == False and msg.channel.name != "controller" and msg.content.startswith("!") == False:
         await userMsg(guild, msg)
 
     if msg.author.id != BOTID:
@@ -109,12 +109,14 @@ async def unremove(guild, msg):
 async def addGrand(guild, msg):
     if msg.author.id != ADMINID:
         await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
     gp = msg.content.split(" ", 1)[1]
     await addGP(msg, gp)
 
 async def rmGP(guild, msg):
     if msg.author.id != ADMINID:
         await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
     gp = msg.content.split(" ", 1)[1]
     await removeGP(msg, gp)
 
@@ -124,30 +126,50 @@ async def printGrand(guild, msg):
 async def setGrand(guild, msg):
     if msg.author.id != ADMINID:
         await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
     gp = msg.content.split(" ", 1)[1]
     await setGP(msg, gp)
 
 async def newSea(guild, msg):
     if msg.author.id != ADMINID:
         await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
     season = msg.content.split(" ", 1)[1]
     await newSeason(msg, season)
 
 async def setSea(guild, msg):
     if msg.author.id != ADMINID:
         await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
     season = msg.content.split(" ", 1)[1]
     await setSeason(msg, season)
 
 async def rmgpsea(guild, msg):
     if msg.author.id != ADMINID:
         await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
     gp = msg.content.split(" ", 1)[1]
     await removeGPseason(msg, gp)
+
+async def anull(guild, msg):
+    if msg.author.id != ADMINID:
+        await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
+    gp = msg.content.split(" ", 1)[1]
+    await anullGP(gp, msg)
+    
+
+async def unanull(guild, msg):
+    if msg.author.id != ADMINID:
+        await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
+    gp = msg.content.split(" ", 1)[1]
+    await unanullGP(gp, msg)
 
 async def csvC(guild, msg):
     if msg.author.id != ADMINID:
         await msg.channel.send("Kun admin kan bruga denne funksjonen")
+        return
     cfile = msg.content.split(" ", 1)[1]
     await csvToPkl(guild, msg, cfile)
 
@@ -171,5 +193,7 @@ commands = {
     "&news" : newSea,
     "&sets" : setSea,
     "&rmgps" : rmgpsea,
+    "&anugp" : anull,
+    "&unanugp" : unanull,
     "&csvtopkl" : csvC
 }

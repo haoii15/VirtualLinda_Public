@@ -95,4 +95,8 @@ async def on_member_join(member):
 	if member.guild.id == GUILDID:
 		await kjellar.joined(member)
 
+@client.event
+async def on_reaction_add(reaction, user):
+	pass
+
 client.run(clientid)
